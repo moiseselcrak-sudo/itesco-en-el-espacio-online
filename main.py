@@ -8,7 +8,7 @@ pygame.mixer.init()
 
 ANCHO = 800
 ALTO = 600
-PANTALLA = pygame.display.set_mode((ANCHO, ALTO), pygame.SCALED)
+PANTALLA = pygame.display.set_mode((ANCHO, ALTO))
 pygame.display.set_caption("ITESCO EN EL ESPACIO - Equipo 2")
 RELOJ = pygame.time.Clock()
 FPS = 60
