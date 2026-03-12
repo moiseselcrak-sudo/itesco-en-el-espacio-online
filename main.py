@@ -1,7 +1,7 @@
 import pygame
 import random
 import math 
-import asyncio # AGREGADO: Importación necesaria para la web
+import asyncio # Requisito para Web/SaaS
 
 pygame.init()
 pygame.mixer.init()
@@ -90,21 +90,22 @@ def cargar_sonido(nombre):
     except:
         return None
 
-sonido_explosion = cargar_sonido("explosion.mp3")
-sonido_moneda = cargar_sonido("coin.mp3")
-sonido_gameover = cargar_sonido("gameover.mp3")
-sonido_victoria = cargar_sonido("win.mp3")
-sonido_powerup = cargar_sonido("powerup.mp3")
-sonido_bomba = cargar_sonido("bomba.mp3")
-sonido_kenzo_malo = cargar_sonido("final.mp3")
+# AQUI SE CAMBIARON TODOS LOS .mp3 A .ogg
+sonido_explosion = cargar_sonido("explosion.ogg")
+sonido_moneda = cargar_sonido("coin.ogg")
+sonido_gameover = cargar_sonido("gameover.ogg")
+sonido_victoria = cargar_sonido("win.ogg")
+sonido_powerup = cargar_sonido("powerup.ogg")
+sonido_bomba = cargar_sonido("bomba.ogg")
+sonido_kenzo_malo = cargar_sonido("final.ogg")
 
 sonidos_disparos = {
-    "normal": cargar_sonido("laser_normal.mp3"),
-    "rapida": cargar_sonido("laser_rapido.mp3"),
-    "pesada": cargar_sonido("laser_pesado.mp3"),
-    "triple": cargar_sonido("laser_escopeta.mp3"),
-    "laser":  cargar_sonido("laser_sniper.mp3"),
-    "auto":   cargar_sonido("laser_auto.mp3")
+    "normal": cargar_sonido("laser_normal.ogg"),
+    "rapida": cargar_sonido("laser_rapido.ogg"),
+    "pesada": cargar_sonido("laser_pesado.ogg"),
+    "triple": cargar_sonido("laser_escopeta.ogg"),
+    "laser":  cargar_sonido("laser_sniper.ogg"),
+    "auto":   cargar_sonido("laser_auto.ogg")
 }
 
 def cambiar_musica(archivo):
@@ -466,7 +467,6 @@ def reiniciar_partida():
     spawn_enemigos(8)
     pygame.mixer.stop()
 
-# AGREGADO: Se convierte en asíncrona para la web
 async def animacion_intro():
     guion = [
         {"texto": "Kenzo: Oigan, ¿trajeron todo para la presentación del videojuego?", "activos": ["kenzo", "dibanhi", "santiago", "belen"]},
@@ -530,11 +530,10 @@ async def animacion_intro():
         dibujar_texto(PANTALLA, "[ESPACIO para continuar]", 16, ANCHO - 100, ALTO - 20, AMARILLO)
 
         pygame.display.flip()
-        await asyncio.sleep(0) # AGREGADO
+        await asyncio.sleep(0)
 
     return "seleccion"
 
-# AGREGADO: Se convierte en asíncrona para la web
 async def animacion_jefe():
     img_jefe_grande = pygame.transform.scale(img_jefe1, (300, 200))
     
@@ -548,7 +547,8 @@ async def animacion_jefe():
     ]
 
     indice = 0
-    cambiar_musica("musica_jefe.mp3")
+    # CAMBIADO A .ogg
+    cambiar_musica("musica_jefe.ogg")
 
     while indice < len(guion):
         RELOJ.tick(FPS)
@@ -592,11 +592,11 @@ async def animacion_jefe():
         dibujar_texto(PANTALLA, "[ESPACIO para continuar]", 18, ANCHO - 120, ALTO - 30, VERDE)
 
         pygame.display.flip()
-        await asyncio.sleep(0) # AGREGADO
+        await asyncio.sleep(0)
 
-# AGREGADO: Se convierte en asíncrona para la web
 async def animacion_epilogo():
-    cambiar_musica("final.mp3")
+    # CAMBIADO A .ogg
+    cambiar_musica("final.ogg")
     
     kenzo_mirando = pygame.transform.flip(img_kenzo, True, False) 
     
@@ -696,14 +696,14 @@ async def animacion_epilogo():
         dibujar_texto(PANTALLA, "[CONTINUAR]", 16, ANCHO - 100, ALTO - 20, GRIS)
 
         pygame.display.flip()
-        await asyncio.sleep(0) # AGREGADO
+        await asyncio.sleep(0)
     
     pygame.mixer.music.stop() 
     return "seleccion"
 
-# AGREGADO: Se convierte en asíncrona para la web
 async def menu_principal():
-    cambiar_musica("musica_menu.mp3")
+    # CAMBIADO A .ogg
+    cambiar_musica("musica_menu.ogg")
     pantalla = True
     while pantalla:
         RELOJ.tick(FPS)
@@ -725,13 +725,13 @@ async def menu_principal():
                 pygame.quit()
                 exit()
         pygame.display.flip()
-        await asyncio.sleep(0) # AGREGADO
+        await asyncio.sleep(0)
 
-# AGREGADO: Se convierte en asíncrona para la web
 async def menu_seleccion():
     global nave_seleccionada, monedas_totales
     if not pygame.mixer.music.get_busy():
-        cambiar_musica("musica_menu.mp3")
+        # CAMBIADO A .ogg
+        cambiar_musica("musica_menu.ogg")
 
     pantalla = True
     while pantalla:
@@ -780,9 +780,8 @@ async def menu_seleccion():
                 exit()
         
         pygame.display.flip()
-        await asyncio.sleep(0) # AGREGADO
+        await asyncio.sleep(0)
 
-# AGREGADO: Se convierte en asíncrona para la web
 async def ciclo_juego():
     global score, boss_activo, boss, monedas_totales 
     
@@ -795,13 +794,14 @@ async def ciclo_juego():
                 exit()
             elif evento.type == pygame.KEYDOWN:
                 if evento.key == pygame.K_b and not boss_activo:
-                    await animacion_jefe() # AGREGADO: Llamada con await
+                    await animacion_jefe()
                     boss_activo = True
                     boss = Boss(jugador)
                     all_sprites.add(boss)
                     grupo_boss.add(boss)
                     for e in enemigos: e.kill()
-                    cambiar_musica("musica_jefe.mp3")
+                    # CAMBIADO A .ogg
+                    cambiar_musica("musica_jefe.ogg")
                 if evento.key == pygame.K_t:
                     if jugador.bombas > 0:
                         jugador.bombas -= 1
@@ -831,13 +831,14 @@ async def ciclo_juego():
         all_sprites.update()
         if not boss_activo and len(enemigos) < 8: spawn_enemigos(8 - len(enemigos))
         if score >= 100 and not boss_activo:
-            await animacion_jefe() # AGREGADO: Llamada con await
+            await animacion_jefe()
             boss_activo = True
             boss = Boss(jugador)
             all_sprites.add(boss)
             grupo_boss.add(boss)
             for e in enemigos: e.kill()
-            cambiar_musica("musica_jefe.mp3")
+            # CAMBIADO A .ogg
+            cambiar_musica("musica_jefe.ogg")
 
         impactos = pygame.sprite.groupcollide(enemigos, balas_jugador, False, True)
         for enemigo, lista_balas in impactos.items():
@@ -918,9 +919,8 @@ async def ciclo_juego():
             pygame.draw.rect(PANTALLA, MORADO, (ANCHO//2-100, 90, (boss.vida/boss.vida_max)*200, 20))
 
         pygame.display.flip()
-        await asyncio.sleep(0) # AGREGADO
+        await asyncio.sleep(0)
 
-# AGREGADO: Se convierte en asíncrona para la web
 async def pantalla_fin(tipo):
     imagen_fondo = None
     texto_titulo = ""
@@ -967,9 +967,8 @@ async def pantalla_fin(tipo):
                 pygame.quit()
                 exit()
         pygame.display.flip()
-        await asyncio.sleep(0) # AGREGADO
+        await asyncio.sleep(0)
 
-# AGREGADO: El bloque final que hace correr el juego como asíncrono
 async def main():
     estado_actual = "menu"
     while True:
@@ -982,5 +981,4 @@ async def main():
         elif estado_actual == "epilogo": estado_actual = await animacion_epilogo()
         await asyncio.sleep(0)
 
-# Lanzamos la función principal
 asyncio.run(main())
