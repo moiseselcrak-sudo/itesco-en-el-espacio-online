@@ -1,14 +1,15 @@
 import pygame
 import random
 import math 
-import asyncio # Requisito para Web/SaaS
+import asyncio # AGREGADO: Importación necesaria para la web
 
 pygame.init()
 pygame.mixer.init()
 
 ANCHO = 800
 ALTO = 600
-PANTALLA = pygame.display.set_mode((ANCHO, ALTO))
+# AGREGADO: pygame.SCALED para que se adapte al tamaño de la pantalla en la web
+PANTALLA = pygame.display.set_mode((ANCHO, ALTO), pygame.SCALED)
 pygame.display.set_caption("ITESCO EN EL ESPACIO - Equipo 2")
 RELOJ = pygame.time.Clock()
 FPS = 60
@@ -90,7 +91,7 @@ def cargar_sonido(nombre):
     except:
         return None
 
-# AQUI SE CAMBIARON TODOS LOS .mp3 A .ogg
+# CAMBIO: Todos los audios pasaron a .ogg
 sonido_explosion = cargar_sonido("explosion.ogg")
 sonido_moneda = cargar_sonido("coin.ogg")
 sonido_gameover = cargar_sonido("gameover.ogg")
@@ -111,7 +112,8 @@ sonidos_disparos = {
 def cambiar_musica(archivo):
     try:
         if pygame.mixer.music.get_busy():
-             pygame.mixer.music.stop()
+             # AGREGADO: fadeout para que no se sature el audio en WebAssembly
+             pygame.mixer.music.fadeout(300)
         pygame.mixer.music.load(archivo)
         pygame.mixer.music.set_volume(0.5) 
         pygame.mixer.music.play(-1) 
@@ -467,6 +469,7 @@ def reiniciar_partida():
     spawn_enemigos(8)
     pygame.mixer.stop()
 
+# Funciones asíncronas para la web
 async def animacion_intro():
     guion = [
         {"texto": "Kenzo: Oigan, ¿trajeron todo para la presentación del videojuego?", "activos": ["kenzo", "dibanhi", "santiago", "belen"]},
@@ -530,7 +533,7 @@ async def animacion_intro():
         dibujar_texto(PANTALLA, "[ESPACIO para continuar]", 16, ANCHO - 100, ALTO - 20, AMARILLO)
 
         pygame.display.flip()
-        await asyncio.sleep(0)
+        await asyncio.sleep(0) 
 
     return "seleccion"
 
@@ -547,8 +550,7 @@ async def animacion_jefe():
     ]
 
     indice = 0
-    # CAMBIADO A .ogg
-    cambiar_musica("musica_jefe.ogg")
+    cambiar_musica("musica_jefe.ogg") 
 
     while indice < len(guion):
         RELOJ.tick(FPS)
@@ -592,11 +594,10 @@ async def animacion_jefe():
         dibujar_texto(PANTALLA, "[ESPACIO para continuar]", 18, ANCHO - 120, ALTO - 30, VERDE)
 
         pygame.display.flip()
-        await asyncio.sleep(0)
+        await asyncio.sleep(0) 
 
 async def animacion_epilogo():
-    # CAMBIADO A .ogg
-    cambiar_musica("final.ogg")
+    cambiar_musica("final.ogg") 
     
     kenzo_mirando = pygame.transform.flip(img_kenzo, True, False) 
     
@@ -696,14 +697,13 @@ async def animacion_epilogo():
         dibujar_texto(PANTALLA, "[CONTINUAR]", 16, ANCHO - 100, ALTO - 20, GRIS)
 
         pygame.display.flip()
-        await asyncio.sleep(0)
+        await asyncio.sleep(0) 
     
     pygame.mixer.music.stop() 
     return "seleccion"
 
 async def menu_principal():
-    # CAMBIADO A .ogg
-    cambiar_musica("musica_menu.ogg")
+    cambiar_musica("musica_menu.ogg") 
     pantalla = True
     while pantalla:
         RELOJ.tick(FPS)
@@ -725,13 +725,12 @@ async def menu_principal():
                 pygame.quit()
                 exit()
         pygame.display.flip()
-        await asyncio.sleep(0)
+        await asyncio.sleep(0) 
 
 async def menu_seleccion():
     global nave_seleccionada, monedas_totales
     if not pygame.mixer.music.get_busy():
-        # CAMBIADO A .ogg
-        cambiar_musica("musica_menu.ogg")
+        cambiar_musica("musica_menu.ogg") 
 
     pantalla = True
     while pantalla:
@@ -780,7 +779,7 @@ async def menu_seleccion():
                 exit()
         
         pygame.display.flip()
-        await asyncio.sleep(0)
+        await asyncio.sleep(0) 
 
 async def ciclo_juego():
     global score, boss_activo, boss, monedas_totales 
@@ -794,14 +793,13 @@ async def ciclo_juego():
                 exit()
             elif evento.type == pygame.KEYDOWN:
                 if evento.key == pygame.K_b and not boss_activo:
-                    await animacion_jefe()
+                    await animacion_jefe() 
                     boss_activo = True
                     boss = Boss(jugador)
                     all_sprites.add(boss)
                     grupo_boss.add(boss)
                     for e in enemigos: e.kill()
-                    # CAMBIADO A .ogg
-                    cambiar_musica("musica_jefe.ogg")
+                    cambiar_musica("musica_jefe.ogg") 
                 if evento.key == pygame.K_t:
                     if jugador.bombas > 0:
                         jugador.bombas -= 1
@@ -831,14 +829,13 @@ async def ciclo_juego():
         all_sprites.update()
         if not boss_activo and len(enemigos) < 8: spawn_enemigos(8 - len(enemigos))
         if score >= 100 and not boss_activo:
-            await animacion_jefe()
+            await animacion_jefe() 
             boss_activo = True
             boss = Boss(jugador)
             all_sprites.add(boss)
             grupo_boss.add(boss)
             for e in enemigos: e.kill()
-            # CAMBIADO A .ogg
-            cambiar_musica("musica_jefe.ogg")
+            cambiar_musica("musica_jefe.ogg") 
 
         impactos = pygame.sprite.groupcollide(enemigos, balas_jugador, False, True)
         for enemigo, lista_balas in impactos.items():
@@ -919,7 +916,7 @@ async def ciclo_juego():
             pygame.draw.rect(PANTALLA, MORADO, (ANCHO//2-100, 90, (boss.vida/boss.vida_max)*200, 20))
 
         pygame.display.flip()
-        await asyncio.sleep(0)
+        await asyncio.sleep(0) 
 
 async def pantalla_fin(tipo):
     imagen_fondo = None
@@ -967,7 +964,7 @@ async def pantalla_fin(tipo):
                 pygame.quit()
                 exit()
         pygame.display.flip()
-        await asyncio.sleep(0)
+        await asyncio.sleep(0) 
 
 async def main():
     estado_actual = "menu"
