@@ -708,7 +708,7 @@ async def menu_seleccion():
 async def ciclo_juego():
     global score, boss_activo, boss, monedas_totales 
     
-    # NUEVO: Control para el flash de la bomba sin romper el juego
+    # NUEVA VARIABLE PARA EL EFECTO FLASH SIN CONGELAR
     flash_frames = 0 
 
     while True:
@@ -723,18 +723,21 @@ async def ciclo_juego():
                     all_sprites.add(boss); grupo_boss.add(boss)
                     for e in enemigos: e.kill()
                     cambiar_musica("musica_jefe.ogg") 
+                
+                # --- AQUÍ ESTÁ LA CORRECCIÓN DE LA BOMBA ---
                 if evento.key == pygame.K_t:
                     if jugador.bombas > 0:
                         jugador.bombas -= 1
                         if sonido_bomba: sonido_bomba.play()
                         
-                        # En lugar de pausar el juego, activamos el efecto visual por 3 fotogramas (aprox 50ms)
+                        # En lugar de usar sleep, le decimos que pinte blanco por 3 frames
                         flash_frames = 3 
                         
                         for e in list(enemigos):
                             e.vida -= 1000
                             if e.vida <= 0: e.kill(); score += 10
                         for b in grupo_boss: b.vida -= 500
+                
                 if evento.key == pygame.K_f:
                     pygame.mixer.music.stop(); return "victoria"
 
@@ -801,7 +804,7 @@ async def ciclo_juego():
             dibujar_texto(PANTALLA, "¡JEFE!", 30, ANCHO//2, 60, con_sombra=True)
             pygame.draw.rect(PANTALLA, MORADO, (ANCHO//2-100, 90, (max(0, boss.vida)/boss.vida_max)*200, 20))
 
-        # NUEVO: Dibuja la pantalla blanca encima de todo si el efecto está activo
+        # --- MAGIA DEL EFECTO FLASH ---
         if flash_frames > 0:
             PANTALLA.fill(BLANCO)
             flash_frames -= 1
