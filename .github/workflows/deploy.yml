@@ -1,0 +1,52 @@
+name: Deploy ITESCO Game to Web
+
+on:
+  push:
+    branches: ["main"] # Se ejecuta cada que subas código a la rama main
+  workflow_dispatch: # Te permite ejecutarlo manualmente si quieres
+
+# Permisos necesarios para que GitHub publique la página
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar Pygbag y dependencias
+        run: |
+          pip install pygbag
+          pip install -r requirements.txt
+
+      - name: Construir versión Web (SaaS)
+        run: python -m pygbag --build .
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Subir los archivos web
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './build/web'
+
+      - name: Desplegar a GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
