@@ -8,7 +8,6 @@ pygame.mixer.init()
 
 ANCHO = 800
 ALTO = 600
-# SIN SCALED para que el puntero del mouse no se descalibre en la web
 PANTALLA = pygame.display.set_mode((ANCHO, ALTO))
 pygame.display.set_caption("ITESCO EN EL ESPACIO - Equipo 2")
 RELOJ = pygame.time.Clock()
@@ -424,7 +423,7 @@ def dibujar_texto_con_fondo(pantalla, texto, tamaño, x, y, color=BLANCO):
     pantalla.blit(fondo, rect_fondo)
     pantalla.blit(superficie, rect_texto)
 
-def dibujar_boton(pantalla, texto, x, y, w, h, color_base, color_hover, clic_detectado=False):
+def dibujar_boton(pantalla, texto, x, y, w, h, color_base, color_hover, clic=False):
     mouse = pygame.mouse.get_pos()
     rect = pygame.Rect(x, y, w, h)
     color = color_base
@@ -432,7 +431,7 @@ def dibujar_boton(pantalla, texto, x, y, w, h, color_base, color_hover, clic_det
     
     if rect.collidepoint(mouse):
         color = color_hover
-        if clic_detectado:
+        if clic:
             activado = True
             
     pygame.draw.rect(pantalla, color, rect)
@@ -467,20 +466,25 @@ def reiniciar_partida():
     spawn_enemigos(8)
     pygame.mixer.stop()
 
+# --- AQUÍ EMPIEZAN LAS FUNCIONES ASÍNCRONAS CORREGIDAS ---
+
 async def animacion_intro():
     guion = [
         {"texto": "Kenzo: Oigan, ¿trajeron todo para la presentación del videojuego?", "activos": ["kenzo", "dibanhi", "santiago", "belen"]},
         {"texto": "Dibanhi: Sí, pero... ¿dónde está Moy?", "activos": ["kenzo", "dibanhi", "santiago", "belen"]},
         {"texto": "Santiago: ¡No me digan que va a llegar tarde otra vez!", "activos": ["kenzo", "dibanhi", "santiago", "belen"]},
         {"texto": "Belén: ¡La profe Karen nos va a reprobar si no llegamos a tiempo!", "activos": ["kenzo", "dibanhi", "santiago", "belen"]},
+        
         {"texto": "Kenzo: Esperen... ¿qué es ese ruido en el cielo?", "activos": ["kenzo", "dibanhi", "santiago", "belen"]},
         {"texto": "ALIENS: ¡HUMANOS! ¡EL ITESCO AHORA NOS PERTENECE!", "activos": ["kenzo", "dibanhi", "santiago", "belen", "aliens"]},
         {"texto": "ALIENS: ¡ENTREGUEN SUS PROYECTOS O SERÁN DESTRUIDOS!", "activos": ["kenzo", "dibanhi", "santiago", "belen", "aliens"]},
         {"texto": "Santiago: ¡Rayos! ¡Van a destruir los servidores!", "activos": ["kenzo", "dibanhi", "santiago", "belen", "aliens"]},
+        
         {"texto": "Moises: ¡Oigan! Perdón por la tardanza...", "activos": ["kenzo", "dibanhi", "santiago", "belen", "aliens", "moises"]},
         {"texto": "Moises: Es que vi a Bulmaro escondiendo unas cajas raras.", "activos": ["kenzo", "dibanhi", "santiago", "belen", "aliens", "moises"]},
         {"texto": "Moises: Lo seguí y encontré estos trajes y naves.", "activos": ["kenzo", "dibanhi", "santiago", "belen", "aliens", "moises"]},
         {"texto": "Moises: ¿Están cool no? ¿Oigan Por qué esas caras de susto?", "activos": ["kenzo", "dibanhi", "santiago", "belen", "aliens", "moises"]},
+        
         {"texto": "Dibanhi: ¡Moy! ¡Eres un ...!", "activos": ["kenzo", "dibanhi", "santiago", "belen", "aliens", "moises"]},
         {"texto": "Todos: ¡A LAS NAVES! ¡HAY QUE SALVAR EL SEMESTRE!", "activos": ["kenzo", "dibanhi", "santiago", "belen", "moises"]}
     ]
@@ -489,14 +493,17 @@ async def animacion_intro():
     
     while indice_dialogo < len(guion):
         RELOJ.tick(FPS)
+        
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
-                pygame.quit(); exit()
+                pygame.quit()
+                exit()
             if evento.type == pygame.KEYDOWN:
                 if evento.key == pygame.K_SPACE or evento.key == pygame.K_RETURN:
                     indice_dialogo += 1
 
-        if indice_dialogo >= len(guion): break
+        if indice_dialogo >= len(guion):
+            break
 
         escena = guion[indice_dialogo]
         activos = escena["activos"]
@@ -513,20 +520,24 @@ async def animacion_intro():
         if "santiago" in activos: PANTALLA.blit(img_santiago, (330, 300))
         if "belen" in activos:    PANTALLA.blit(img_belen, (630, 300))
         if "moises" in activos:   PANTALLA.blit(img_moises, (30, 300))
+
         if "aliens" in activos:   PANTALLA.blit(img_enemigo_intro, (ANCHO//2 - 75, 50))
 
         pygame.draw.rect(PANTALLA, NEGRO, (0, ALTO - 100, ANCHO, 100))
         pygame.draw.rect(PANTALLA, BLANCO, (0, ALTO - 100, ANCHO, 100), 3)
-        dibujar_texto(PANTALLA, escena["texto"], 20, ANCHO//2, ALTO - 70, BLANCO)
+        
+        texto_actual = escena["texto"]
+        dibujar_texto(PANTALLA, texto_actual, 20, ANCHO//2, ALTO - 70, BLANCO)
         dibujar_texto(PANTALLA, "[ESPACIO para continuar]", 16, ANCHO - 100, ALTO - 20, AMARILLO)
 
         pygame.display.flip()
-        await asyncio.sleep(0) 
+        await asyncio.sleep(0)
 
     return "seleccion"
 
 async def animacion_jefe():
     img_jefe_grande = pygame.transform.scale(img_jefe1, (300, 200))
+    
     guion = [
         {"texto": "BOSS: JAJAJA... ¡Patéticos estudiantes!", "habla": "jefe"},
         {"texto": "BOSS: Han derrotado a mis tropas, pero...", "habla": "jefe"},
@@ -537,26 +548,37 @@ async def animacion_jefe():
     ]
 
     indice = 0
-    cambiar_musica("musica_jefe.ogg") 
+    cambiar_musica("musica_jefe.ogg")
 
     while indice < len(guion):
         RELOJ.tick(FPS)
+        
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
-                pygame.quit(); exit()
+                pygame.quit()
+                exit()
             if evento.type == pygame.KEYDOWN:
                 if evento.key == pygame.K_SPACE or evento.key == pygame.K_RETURN:
                     indice += 1
 
-        if indice >= len(guion): break
+        if indice >= len(guion):
+            break
 
-        if img_fondo_jefe: PANTALLA.blit(img_fondo_jefe, (0, 0))
-        else: PANTALLA.fill(NEGRO)
+        if img_fondo_jefe:
+            PANTALLA.blit(img_fondo_jefe, (0, 0))
+        else:
+            PANTALLA.fill(NEGRO)
 
         escena = guion[indice]
+        
         if escena["habla"] == "jefe":
-            img_jefe_grande.set_alpha(255 if pygame.time.get_ticks() % 1000 < 500 else 200)
+            if pygame.time.get_ticks() % 1000 < 500:
+                img_jefe_grande.set_alpha(255)
+            else:
+                img_jefe_grande.set_alpha(200)
+            
             PANTALLA.blit(img_jefe_grande, (ANCHO - 350, 150))
+            
         elif escena["habla"] == "team":
             PANTALLA.blit(img_kenzo, (20, 300))
             PANTALLA.blit(img_dibanhi, (120, 300))
@@ -570,13 +592,17 @@ async def animacion_jefe():
         dibujar_texto(PANTALLA, "[ESPACIO para continuar]", 18, ANCHO - 120, ALTO - 30, VERDE)
 
         pygame.display.flip()
-        await asyncio.sleep(0) 
+        await asyncio.sleep(0)
 
 async def animacion_epilogo():
-    cambiar_musica("final.ogg") 
+    cambiar_musica("final.ogg")
+    
     kenzo_mirando = pygame.transform.flip(img_kenzo, True, False) 
-    jefe_muriendo = pygame.transform.scale(img_jefe2.copy(), (200, 150))
+    
+    jefe_muriendo = img_jefe2.copy()
     jefe_muriendo.set_alpha(150) 
+    jefe_muriendo = pygame.transform.scale(jefe_muriendo, (200, 150))
+
     zoom_kenzo = 1.0 
 
     guion = [
@@ -584,9 +610,11 @@ async def animacion_epilogo():
         {"texto": "BOSS: Jejeje... ¿A salvo? Pobre criatura ignorante...", "estado": "normal"},
         {"texto": "BOSS: Mi armadura limitaba mi poder... y tú acabas de romperla.", "estado": "normal"},
         {"texto": "BOSS: He buscado por galaxias un recipiente digno...", "estado": "normal"},
+        
         {"texto": "Kenzo: ¿De qué hablas? ¡Tu energía se desvanece!", "estado": "normal"},
         {"texto": "BOSS: Al contrario... ¡AHORA ES TUYA!", "estado": "absorcion"},
         {"texto": "Kenzo: ¡NO! ¡SAL DE MI CABEZA! ¡AAAAAGHH!", "estado": "absorcion"},
+        
         {"texto": "...", "estado": "malo"},
         {"texto": "Kenzo (Renacido): Silencio... Ya no hay dolor.", "estado": "malo"},
         {"texto": "Kenzo (Renacido): Kenzo era débil. Se preocupaba por exámenes y tareas.", "estado": "malo"},
@@ -595,86 +623,126 @@ async def animacion_epilogo():
         {"texto": "Kenzo (Renacido): EL VERDADERO JUEGO APENAS COMIENZA.", "estado": "malo"}
     ]
 
-    indice = 0; alpha_negro = 0 
+    indice = 0
+    alpha_negro = 0 
 
     while indice < len(guion):
         RELOJ.tick(FPS)
+        
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
-                pygame.quit(); exit()
+                pygame.quit()
+                exit()
             if evento.type == pygame.KEYDOWN:
                 if evento.key == pygame.K_SPACE or evento.key == pygame.K_RETURN:
                     indice += 1
 
-        if indice >= len(guion): break
+        if indice >= len(guion):
+            break
 
-        escena = guion[indice]; estado = escena["estado"]
+        escena = guion[indice]
+        estado = escena["estado"]
 
-        if img_fondo_jefe: PANTALLA.blit(img_fondo_jefe, (0, 0))
-        else: PANTALLA.fill(NEGRO)
+        if img_fondo_jefe:
+            PANTALLA.blit(img_fondo_jefe, (0, 0))
+        else:
+            PANTALLA.fill(NEGRO)
 
         if estado == "normal":
             PANTALLA.blit(kenzo_mirando, (200, ALTO - 250))
             PANTALLA.blit(jefe_muriendo, (ANCHO - 300, 100))
+            
         elif estado == "absorcion":
-            PANTALLA.blit(kenzo_mirando, (200 + random.randint(-5, 5), ALTO - 250))
-            if pygame.time.get_ticks() % 200 < 100: PANTALLA.blit(jefe_muriendo, (ANCHO - 300, 100))
-            filtro_rojo = pygame.Surface((ANCHO, ALTO)); filtro_rojo.fill(ROJO); filtro_rojo.set_alpha(50)
+            offset_x = random.randint(-5, 5)
+            PANTALLA.blit(kenzo_mirando, (200 + offset_x, ALTO - 250))
+            
+            if pygame.time.get_ticks() % 200 < 100:
+                PANTALLA.blit(jefe_muriendo, (ANCHO - 300, 100))
+            
+            filtro_rojo = pygame.Surface((ANCHO, ALTO))
+            filtro_rojo.fill(ROJO)
+            filtro_rojo.set_alpha(50)
             PANTALLA.blit(filtro_rojo, (0,0))
-        elif estado == "malo":
-            alpha_negro = min(200, alpha_negro + 2)
-            sombra = pygame.Surface((ANCHO, ALTO)); sombra.fill(NEGRO); sombra.set_alpha(alpha_negro)
-            PANTALLA.blit(sombra, (0,0))
-            zoom_kenzo = min(3, zoom_kenzo + 0.005) 
-            kenzo_g = pygame.transform.scale(img_kenzo_malo, (int(img_kenzo_malo.get_width() * zoom_kenzo), int(img_kenzo_malo.get_height() * zoom_kenzo)))
-            PANTALLA.blit(kenzo_g, kenzo_g.get_rect(center=(ANCHO//2, ALTO//2)))
 
-        color_borde = ROJO if estado in ["absorcion", "malo"] else AZUL
+        elif estado == "malo":
+            if alpha_negro < 200: alpha_negro += 2
+            sombra = pygame.Surface((ANCHO, ALTO))
+            sombra.fill(NEGRO)
+            sombra.set_alpha(alpha_negro)
+            PANTALLA.blit(sombra, (0,0))
+
+            if zoom_kenzo < 3:
+                zoom_kenzo += 0.005 
+            
+            nuevo_w = int(img_kenzo_malo.get_width() * zoom_kenzo)
+            nuevo_h = int(img_kenzo_malo.get_height() * zoom_kenzo)
+            
+            kenzo_grande = pygame.transform.scale(img_kenzo_malo, (nuevo_w, nuevo_h))
+            rect_malo = kenzo_grande.get_rect(center=(ANCHO//2, ALTO//2))
+            PANTALLA.blit(kenzo_grande, rect_malo)
+
+        color_borde = AZUL
+        if estado == "absorcion" or estado == "malo":
+            color_borde = ROJO
+            
         pygame.draw.rect(PANTALLA, NEGRO, (0, ALTO - 100, ANCHO, 100))
         pygame.draw.rect(PANTALLA, color_borde, (0, ALTO - 100, ANCHO, 100), 3)
-        dibujar_texto(PANTALLA, escena["texto"], 24, ANCHO//2, ALTO - 70, ROJO if estado == "malo" else BLANCO)
+        
+        color_texto = BLANCO
+        if estado == "malo": color_texto = ROJO
+        
+        dibujar_texto(PANTALLA, escena["texto"], 24, ANCHO//2, ALTO - 70, color_texto)
         dibujar_texto(PANTALLA, "[CONTINUAR]", 16, ANCHO - 100, ALTO - 20, GRIS)
 
         pygame.display.flip()
-        await asyncio.sleep(0) 
+        await asyncio.sleep(0)
     
     pygame.mixer.music.stop() 
     return "seleccion"
 
 async def menu_principal():
-    cambiar_musica("musica_menu.ogg") 
-    while True:
+    cambiar_musica("musica_menu.ogg")
+    pantalla = True
+    while pantalla:
         RELOJ.tick(FPS)
-        clic = False 
+        clic = False
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
-                pygame.quit(); exit()
+                pygame.quit()
+                exit()
             if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
-                clic = True 
+                clic = True
 
-        if img_fondo_inicio: PANTALLA.blit(img_fondo_inicio, (0, 0))
-        else: PANTALLA.fill(NEGRO)
+        if img_fondo_inicio:
+            PANTALLA.blit(img_fondo_inicio, (0, 0))
+        else:
+            PANTALLA.fill(NEGRO)
             
         dibujar_texto_con_fondo(PANTALLA, "ITESCO EN EL ESPACIO", 50, ANCHO//2, 100, AZUL)
         
         if dibujar_boton(PANTALLA, "INICIAR JUEGO", ANCHO//2 - 100, 250, 200, 50, VERDE, BLANCO, clic):
             return "intro" 
+            
         if dibujar_boton(PANTALLA, "SALIR", ANCHO//2 - 100, 350, 200, 50, ROJO, BLANCO, clic):
-            pygame.quit(); exit()
+            pygame.quit()
+            exit()
             
         pygame.display.flip()
-        await asyncio.sleep(0) 
+        await asyncio.sleep(0)
 
 async def menu_seleccion():
     global nave_seleccionada, monedas_totales
-    if not pygame.mixer.music.get_busy(): cambiar_musica("musica_menu.ogg") 
+    if not pygame.mixer.music.get_busy():
+        cambiar_musica("musica_menu.ogg")
 
-    while True:
+    pantalla = True
+    while pantalla:
         RELOJ.tick(FPS)
         clic = False
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
-                pygame.quit(); exit()
+                pygame.quit()
+                exit()
             if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
                 clic = True
 
@@ -683,108 +751,153 @@ async def menu_seleccion():
         dibujar_texto(PANTALLA, f"Tus Monedas: {monedas_totales}", 25, ANCHO - 150, 20, AMARILLO)
 
         for i in range(5):
-            info = NAVES_INFO[i]; lvl = mejoras[i]
-            x = 50 + (i % 3) * 250; y = 80 + (i // 3) * 240
+            info = NAVES_INFO[i]
+            lvl = mejoras[i]
+            daño_actual = int(info["daño"] * (1 + lvl * 0.15))
+            daño_sig = int(info["daño"] * (1 + (lvl+1) * 0.15))
+            cd_actual = int(info["cooldown"] * (1 - lvl * 0.10))
+            cd_sig = int(info["cooldown"] * (1 - (lvl+1) * 0.10))
+
+            x = 50 + (i % 3) * 250
+            y = 80 + (i // 3) * 240
             
-            if i == nave_seleccionada: pygame.draw.rect(PANTALLA, BLANCO, (x-5, y-5, 210, 220), 3)
+            if i == nave_seleccionada:
+                pygame.draw.rect(PANTALLA, BLANCO, (x-5, y-5, 210, 220), 3)
             pygame.draw.rect(PANTALLA, GRIS, (x, y, 200, 210))
-            PANTALLA.blit(info["img"], info["img"].get_rect(center=(x + 100, y + 30)))
+            
+            img_rect = info["img"].get_rect(center=(x + 100, y + 30))
+            PANTALLA.blit(info["img"], img_rect)
             
             dibujar_texto(PANTALLA, f"{info['nombre']} (Nvl {lvl})", 20, x + 100, y + 55, BLANCO)
-            dibujar_texto(PANTALLA, f"Daño: {int(info['daño'] * (1 + lvl * 0.15))} -> {int(info['daño'] * (1 + (lvl+1) * 0.15))}", 16, x + 100, y + 80, VERDE_CLARO)
-            dibujar_texto(PANTALLA, f"Rapidez: {int(info['cooldown'] * (1 - lvl * 0.10))}ms -> {int(info['cooldown'] * (1 - (lvl+1) * 0.10))}ms", 16, x + 100, y + 100, VERDE_CLARO)
+            dibujar_texto(PANTALLA, f"Daño: {daño_actual} -> {daño_sig}", 16, x + 100, y + 80, VERDE_CLARO)
+            dibujar_texto(PANTALLA, f"Rapidez: {cd_actual}ms -> {cd_sig}ms", 16, x + 100, y + 100, VERDE_CLARO)
             
             costo = info["costo"] * (lvl + 1)
-            if dibujar_boton(PANTALLA, "Elegir", x + 10, y + 140, 80, 30, VERDE, BLANCO, clic): nave_seleccionada = i
+            if dibujar_boton(PANTALLA, "Elegir", x + 10, y + 140, 80, 30, VERDE, BLANCO, clic):
+                nave_seleccionada = i
             if dibujar_boton(PANTALLA, f"Mejorar (${costo})", x + 100, y + 140, 90, 30, AMARILLO, BLANCO, clic):
-                if monedas_totales >= costo: monedas_totales -= costo; mejoras[i] += 1
+                if monedas_totales >= costo:
+                    monedas_totales -= costo
+                    mejoras[i] += 1
         
         if dibujar_boton(PANTALLA, "¡A VOLAR!", ANCHO//2 - 100, 550, 200, 40, AZUL, BLANCO, clic):
-            reiniciar_partida(); return "juego"
+            reiniciar_partida()
+            return "juego"
         
         pygame.display.flip()
-        await asyncio.sleep(0) 
+        await asyncio.sleep(0)
 
 async def ciclo_juego():
     global score, boss_activo, boss, monedas_totales 
+    flash_frames = 0
     
-    # NUEVA VARIABLE PARA EL EFECTO FLASH SIN CONGELAR
-    flash_frames = 0 
-
-    while True:
+    ejecutando = True
+    while ejecutando:
         RELOJ.tick(FPS)
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
-                pygame.quit(); exit()
+                pygame.quit()
+                exit()
             elif evento.type == pygame.KEYDOWN:
+                # !!! AQUÍ ESTÁ LA CORRECCIÓN CLAVE CON EL AWAIT !!!
                 if evento.key == pygame.K_b and not boss_activo:
                     await animacion_jefe() 
-                    boss_activo = True; boss = Boss(jugador)
-                    all_sprites.add(boss); grupo_boss.add(boss)
+                    boss_activo = True
+                    boss = Boss(jugador)
+                    all_sprites.add(boss)
+                    grupo_boss.add(boss)
                     for e in enemigos: e.kill()
-                    cambiar_musica("musica_jefe.ogg") 
-                
-                # --- AQUÍ ESTÁ LA CORRECCIÓN DE LA BOMBA ---
+                    cambiar_musica("musica_jefe.ogg")
                 if evento.key == pygame.K_t:
                     if jugador.bombas > 0:
                         jugador.bombas -= 1
                         if sonido_bomba: sonido_bomba.play()
-                        
-                        # En lugar de usar sleep, le decimos que pinte blanco por 3 frames
-                        flash_frames = 3 
+                        flash_frames = 3
                         
                         for e in list(enemigos):
                             e.vida -= 1000
-                            if e.vida <= 0: e.kill(); score += 10
-                        for b in grupo_boss: b.vida -= 500
-                
+                            if e.vida <= 0:
+                                e.kill()
+                                score += 10
+                        for b in grupo_boss:
+                            b.vida -= 500
                 if evento.key == pygame.K_f:
-                    pygame.mixer.music.stop(); return "victoria"
+                    pygame.mixer.music.stop()
+                    return "victoria"
 
-        if boss_activo and img_fondo_jefe: PANTALLA.blit(img_fondo_jefe, (0, 0))
-        elif img_fondo_juego: PANTALLA.blit(img_fondo_juego, (0, 0))
-        else: PANTALLA.fill(NEGRO)
+        if boss_activo and img_fondo_jefe:
+            PANTALLA.blit(img_fondo_jefe, (0, 0))
+        elif img_fondo_juego:
+            PANTALLA.blit(img_fondo_juego, (0, 0))
+        else:
+            PANTALLA.fill(NEGRO)
 
         all_sprites.update()
         if not boss_activo and len(enemigos) < 8: spawn_enemigos(8 - len(enemigos))
+        
         if score >= 100 and not boss_activo:
-            await animacion_jefe() 
-            boss_activo = True; boss = Boss(jugador); all_sprites.add(boss); grupo_boss.add(boss)
+            await animacion_jefe() # !!! AQUÍ TAMBIÉN ESTÁ EL AWAIT !!!
+            boss_activo = True
+            boss = Boss(jugador)
+            all_sprites.add(boss)
+            grupo_boss.add(boss)
             for e in enemigos: e.kill()
-            cambiar_musica("musica_jefe.ogg") 
+            cambiar_musica("musica_jefe.ogg")
 
         impactos = pygame.sprite.groupcollide(enemigos, balas_jugador, False, True)
         for enemigo, lista_balas in impactos.items():
             for bala in lista_balas:
                 enemigo.vida -= bala.damage
                 if enemigo.vida <= 0:
-                    enemigo.kill(); score += 10
+                    enemigo.kill()
+                    score += 10
                     if sonido_explosion: sonido_explosion.play()
                     if random.random() > 0.9:
-                        p = PowerUp(enemigo.rect.center); all_sprites.add(p); powerups.add(p)
+                        pow = PowerUp(enemigo.rect.center)
+                        all_sprites.add(pow)
+                        powerups.add(pow)
                     elif random.random() > 0.6:
-                        m = Moneda(enemigo.rect.centerx, enemigo.rect.centery); all_sprites.add(m); monedas.add(m)
+                        moneda = Moneda(enemigo.rect.centerx, enemigo.rect.centery)
+                        all_sprites.add(moneda)
+                        monedas.add(moneda)
 
-        for p in pygame.sprite.spritecollide(jugador, powerups, True):
+        hits_power = pygame.sprite.spritecollide(jugador, powerups, True)
+        for p in hits_power:
             if sonido_powerup: sonido_powerup.play()
-            if p.tipo == 'vida': jugador.vida = min(jugador.vida_max, jugador.vida + 30)
-            elif p.tipo == 'doble': jugador.activar_doble_disparo()
+            if p.tipo == 'vida':
+                jugador.vida += 30
+                if jugador.vida > jugador.vida_max: jugador.vida = jugador.vida_max
+            elif p.tipo == 'doble':
+                jugador.activar_doble_disparo()
 
         if boss_activo:
-            for boss_obj, lista_balas in pygame.sprite.groupcollide(grupo_boss, balas_jugador, False, True).items():
+            impactos_boss = pygame.sprite.groupcollide(grupo_boss, balas_jugador, False, True)
+            for boss_obj, lista_balas in impactos_boss.items():
                 for bala in lista_balas:
                     boss_obj.vida -= bala.damage
                     if boss_obj.vida <= 0:
-                        boss_obj.kill(); boss_activo = False; score += 5000; monedas_totales += jugador.monedas_partida + 200
-                        pygame.mixer.music.stop(); return "victoria"
+                        boss_obj.kill()
+                        boss_activo = False
+                        score += 5000
+                        monedas_totales += jugador.monedas_partida + 200
+                        pygame.mixer.music.stop()
+                        return "victoria"
 
-        if pygame.sprite.spritecollide(jugador, enemigos, True): jugador.vida -= 20
-        if pygame.sprite.spritecollide(jugador, balas_enemigas, True): jugador.vida -= 10
-        if pygame.sprite.spritecollide(jugador, grupo_boss, False): jugador.vida -= 5
+        golpes = pygame.sprite.spritecollide(jugador, enemigos, True)
+        golpes_balas = pygame.sprite.spritecollide(jugador, balas_enemigas, True)
+        golpes_boss = pygame.sprite.spritecollide(jugador, grupo_boss, False)
 
-        if jugador.vida <= 0: monedas_totales += jugador.monedas_partida; pygame.mixer.music.stop(); return "game_over"
+        if golpes: jugador.vida -= 20
+        if golpes_balas: jugador.vida -= 10
+        if golpes_boss: jugador.vida -= 5
 
-        for m in pygame.sprite.spritecollide(jugador, monedas, True):
+        if jugador.vida <= 0:
+            monedas_totales += jugador.monedas_partida
+            pygame.mixer.music.stop()
+            return "game_over"
+
+        recoleccion = pygame.sprite.spritecollide(jugador, monedas, True)
+        for moneda in recoleccion:
             jugador.monedas_partida += 1
             if sonido_moneda: sonido_moneda.play()
 
@@ -794,53 +907,79 @@ async def ciclo_juego():
         dibujar_texto(PANTALLA, f"Puntos: {score}", 20, ANCHO//2, 10)
         dibujar_texto(PANTALLA, f"Monedas: {jugador.monedas_partida}", 20, ANCHO-80, 10)
         dibujar_texto(PANTALLA, f"Bombas [T]: {jugador.bombas}", 20, 100, 40, VERDE_CLARO)
-        if jugador.powerup_doble: dibujar_texto(PANTALLA, "¡DOBLE DISPARO!", 20, ANCHO//2, 40, CYAN)
+        if jugador.powerup_doble:
+            dibujar_texto(PANTALLA, "¡DOBLE DISPARO!", 20, ANCHO//2, 40, CYAN)
 
-        l_vida = 200; actual = (max(0, jugador.vida) / jugador.vida_max) * l_vida
-        pygame.draw.rect(PANTALLA, ROJO, (10, 70, l_vida, 15)); pygame.draw.rect(PANTALLA, VERDE, (10, 70, actual, 15))
-        pygame.draw.rect(PANTALLA, BLANCO, (10, 70, l_vida, 15), 2)
+        largo_vida = 200
+        if jugador.vida < 0: jugador.vida = 0
+        actual = (jugador.vida / jugador.vida_max) * largo_vida
+        pygame.draw.rect(PANTALLA, ROJO, (10, 70, largo_vida, 15))
+        pygame.draw.rect(PANTALLA, VERDE, (10, 70, actual, 15))
+        pygame.draw.rect(PANTALLA, BLANCO, (10, 70, largo_vida, 15), 2)
 
         if boss_activo:
             dibujar_texto(PANTALLA, "¡JEFE!", 30, ANCHO//2, 60, con_sombra=True)
-            pygame.draw.rect(PANTALLA, MORADO, (ANCHO//2-100, 90, (max(0, boss.vida)/boss.vida_max)*200, 20))
+            if boss.vida < 0: boss.vida = 0
+            pygame.draw.rect(PANTALLA, MORADO, (ANCHO//2-100, 90, (boss.vida/boss.vida_max)*200, 20))
 
-        # --- MAGIA DEL EFECTO FLASH ---
         if flash_frames > 0:
             PANTALLA.fill(BLANCO)
             flash_frames -= 1
 
         pygame.display.flip()
-        await asyncio.sleep(0) 
+        await asyncio.sleep(0)
 
 async def pantalla_fin(tipo):
-    img_bg = img_fondo_win if tipo == "victoria" else img_fondo_gameover
-    txt_titulo = "¡MISIÓN COMPLETADA!" if tipo == "victoria" else "NAVE DESTRUIDA"
-    c_titulo = VERDE if tipo == "victoria" else ROJO
-    if tipo == "victoria" and sonido_victoria: sonido_victoria.play()
-    elif tipo != "victoria" and sonido_gameover: sonido_gameover.play()
+    imagen_fondo = None
+    texto_titulo = ""
+    color_titulo = BLANCO
+    
+    if tipo == "victoria":
+        if sonido_victoria: sonido_victoria.play()
+        imagen_fondo = img_fondo_win
+        texto_titulo = "¡MISIÓN COMPLETADA!"
+        color_titulo = VERDE
+    else:
+        if sonido_gameover: sonido_gameover.play()
+        imagen_fondo = img_fondo_gameover
+        texto_titulo = "NAVE DESTRUIDA"
+        color_titulo = ROJO
 
-    while True:
+    texto_boton = "IR A LA TIENDA"
+    if tipo == "victoria":
+        texto_boton = "CONTINUAR..."
+
+    esperando = True
+    while esperando:
         RELOJ.tick(FPS)
         clic = False
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
-                pygame.quit(); exit()
+                pygame.quit()
+                exit()
             if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
                 clic = True
 
-        PANTALLA.blit(img_bg, (0, 0)) if img_bg else PANTALLA.fill(NEGRO)
-        off_y = 150 if img_bg else 0 
-
-        dibujar_texto_con_fondo(PANTALLA, txt_titulo, 50, ANCHO//2, 100 + off_y, c_titulo)
-        dibujar_texto_con_fondo(PANTALLA, f"Puntaje Final: {score}", 30, ANCHO//2, 200 + off_y)
-        dibujar_texto_con_fondo(PANTALLA, f"Monedas Ganadas: {jugador.monedas_partida}", 30, ANCHO//2, 250 + off_y, AMARILLO)
+        if imagen_fondo: PANTALLA.blit(imagen_fondo, (0, 0))
+        else: PANTALLA.fill(NEGRO)
         
-        if dibujar_boton(PANTALLA, "CONTINUAR..." if tipo == "victoria" else "IR A LA TIENDA", ANCHO//2 - 100, 350 + off_y, 200, 50, AZUL, BLANCO, clic):
+        offset_y = 0
+        if imagen_fondo: offset_y = 150 
+
+        dibujar_texto_con_fondo(PANTALLA, texto_titulo, 50, ANCHO//2, 100 + offset_y, color_titulo)
+        dibujar_texto_con_fondo(PANTALLA, f"Puntaje Final: {score}", 30, ANCHO//2, 200 + offset_y)
+        dibujar_texto_con_fondo(PANTALLA, f"Monedas Ganadas: {jugador.monedas_partida}", 30, ANCHO//2, 250 + offset_y, AMARILLO)
+        
+        if dibujar_boton(PANTALLA, texto_boton, ANCHO//2 - 100, 350 + offset_y, 200, 50, AZUL, BLANCO, clic):
              pygame.mixer.stop() 
-             return "epilogo" if tipo == "victoria" else "seleccion"
+             
+             if tipo == "victoria":
+                 return "epilogo"
+             else:
+                 return "seleccion"
 
         pygame.display.flip()
-        await asyncio.sleep(0) 
+        await asyncio.sleep(0)
 
 async def main():
     estado_actual = "menu"
