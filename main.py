@@ -8,6 +8,7 @@ pygame.mixer.init()
 
 ANCHO = 800
 ALTO = 600
+# SIN SCALED para que el puntero del mouse no se descalibre en la web
 PANTALLA = pygame.display.set_mode((ANCHO, ALTO))
 pygame.display.set_caption("ITESCO EN EL ESPACIO - Equipo 2")
 RELOJ = pygame.time.Clock()
@@ -423,7 +424,6 @@ def dibujar_texto_con_fondo(pantalla, texto, tamaño, x, y, color=BLANCO):
     pantalla.blit(fondo, rect_fondo)
     pantalla.blit(superficie, rect_texto)
 
-# --- NUEVA FUNCIÓN DE BOTÓN (SIN CONGELAMIENTOS) ---
 def dibujar_boton(pantalla, texto, x, y, w, h, color_base, color_hover, clic_detectado=False):
     mouse = pygame.mouse.get_pos()
     rect = pygame.Rect(x, y, w, h)
@@ -641,7 +641,6 @@ async def animacion_epilogo():
     pygame.mixer.music.stop() 
     return "seleccion"
 
-# --- NUEVO: MANEJO DE CLICS WEB EN MENÚ PRINCIPAL ---
 async def menu_principal():
     cambiar_musica("musica_menu.ogg") 
     while True:
@@ -666,7 +665,6 @@ async def menu_principal():
         pygame.display.flip()
         await asyncio.sleep(0) 
 
-# --- NUEVO: MANEJO DE CLICS WEB EN TIENDA ---
 async def menu_seleccion():
     global nave_seleccionada, monedas_totales
     if not pygame.mixer.music.get_busy(): cambiar_musica("musica_menu.ogg") 
@@ -709,6 +707,10 @@ async def menu_seleccion():
 
 async def ciclo_juego():
     global score, boss_activo, boss, monedas_totales 
+    
+    # NUEVO: Control para el flash de la bomba sin romper el juego
+    flash_frames = 0 
+
     while True:
         RELOJ.tick(FPS)
         for evento in pygame.event.get():
@@ -723,9 +725,12 @@ async def ciclo_juego():
                     cambiar_musica("musica_jefe.ogg") 
                 if evento.key == pygame.K_t:
                     if jugador.bombas > 0:
-                        jugador.bombas -= 1; PANTALLA.fill(BLANCO); pygame.display.flip()
+                        jugador.bombas -= 1
                         if sonido_bomba: sonido_bomba.play()
-                        await asyncio.sleep(0.05) 
+                        
+                        # En lugar de pausar el juego, activamos el efecto visual por 3 fotogramas (aprox 50ms)
+                        flash_frames = 3 
+                        
                         for e in list(enemigos):
                             e.vida -= 1000
                             if e.vida <= 0: e.kill(); score += 10
@@ -796,10 +801,14 @@ async def ciclo_juego():
             dibujar_texto(PANTALLA, "¡JEFE!", 30, ANCHO//2, 60, con_sombra=True)
             pygame.draw.rect(PANTALLA, MORADO, (ANCHO//2-100, 90, (max(0, boss.vida)/boss.vida_max)*200, 20))
 
+        # NUEVO: Dibuja la pantalla blanca encima de todo si el efecto está activo
+        if flash_frames > 0:
+            PANTALLA.fill(BLANCO)
+            flash_frames -= 1
+
         pygame.display.flip()
         await asyncio.sleep(0) 
 
-# --- NUEVO: MANEJO DE CLICS WEB EN PANTALLA FIN ---
 async def pantalla_fin(tipo):
     img_bg = img_fondo_win if tipo == "victoria" else img_fondo_gameover
     txt_titulo = "¡MISIÓN COMPLETADA!" if tipo == "victoria" else "NAVE DESTRUIDA"
