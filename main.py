@@ -1,14 +1,14 @@
 import pygame
 import random
 import math 
-import asyncio # AGREGADO: Importación necesaria para la web
+import asyncio # OBLIGATORIO PARA LA WEB
 
 pygame.init()
 pygame.mixer.init()
 
 ANCHO = 800
 ALTO = 600
-# AGREGADO: pygame.SCALED para que se adapte al tamaño de la pantalla en la web
+# AGREGADO: pygame.SCALED para que ocupe bien la pantalla en la web
 PANTALLA = pygame.display.set_mode((ANCHO, ALTO), pygame.SCALED)
 pygame.display.set_caption("ITESCO EN EL ESPACIO - Equipo 2")
 RELOJ = pygame.time.Clock()
@@ -91,7 +91,7 @@ def cargar_sonido(nombre):
     except:
         return None
 
-# CAMBIO: Todos los audios pasaron a .ogg
+# Asegurando que sean .ogg para la web
 sonido_explosion = cargar_sonido("explosion.ogg")
 sonido_moneda = cargar_sonido("coin.ogg")
 sonido_gameover = cargar_sonido("gameover.ogg")
@@ -112,8 +112,7 @@ sonidos_disparos = {
 def cambiar_musica(archivo):
     try:
         if pygame.mixer.music.get_busy():
-             # AGREGADO: fadeout para que no se sature el audio en WebAssembly
-             pygame.mixer.music.fadeout(300)
+             pygame.mixer.music.fadeout(300) # Fadeout evita crujidos en web
         pygame.mixer.music.load(archivo)
         pygame.mixer.music.set_volume(0.5) 
         pygame.mixer.music.play(-1) 
@@ -436,7 +435,7 @@ def dibujar_boton(pantalla, texto, x, y, w, h, color_base, color_hover, accion=N
         color = color_hover
         if click[0] == 1 and accion is not None:
             activado = True
-            pygame.time.delay(200)
+            # ELIMINADO: pygame.time.delay(200) causaba que la web se congelara
     pygame.draw.rect(pantalla, color, rect)
     pygame.draw.rect(pantalla, BLANCO, rect, 2)
     dibujar_texto(pantalla, texto, 18, x + w//2, y + 10, NEGRO, con_sombra=False)
@@ -469,7 +468,8 @@ def reiniciar_partida():
     spawn_enemigos(8)
     pygame.mixer.stop()
 
-# Funciones asíncronas para la web
+# --- TODAS LAS FUNCIONES AHORA SON ASYNC Y TIENEN AWAIT ASYNCIO.SLEEP(0) ---
+
 async def animacion_intro():
     guion = [
         {"texto": "Kenzo: Oigan, ¿trajeron todo para la presentación del videojuego?", "activos": ["kenzo", "dibanhi", "santiago", "belen"]},
@@ -533,7 +533,7 @@ async def animacion_intro():
         dibujar_texto(PANTALLA, "[ESPACIO para continuar]", 16, ANCHO - 100, ALTO - 20, AMARILLO)
 
         pygame.display.flip()
-        await asyncio.sleep(0) 
+        await asyncio.sleep(0) # CLAVE WEB
 
     return "seleccion"
 
@@ -550,7 +550,7 @@ async def animacion_jefe():
     ]
 
     indice = 0
-    cambiar_musica("musica_jefe.ogg") 
+    cambiar_musica("musica_jefe.ogg")
 
     while indice < len(guion):
         RELOJ.tick(FPS)
@@ -594,10 +594,10 @@ async def animacion_jefe():
         dibujar_texto(PANTALLA, "[ESPACIO para continuar]", 18, ANCHO - 120, ALTO - 30, VERDE)
 
         pygame.display.flip()
-        await asyncio.sleep(0) 
+        await asyncio.sleep(0) # CLAVE WEB
 
 async def animacion_epilogo():
-    cambiar_musica("final.ogg") 
+    cambiar_musica("final.ogg")
     
     kenzo_mirando = pygame.transform.flip(img_kenzo, True, False) 
     
@@ -697,13 +697,13 @@ async def animacion_epilogo():
         dibujar_texto(PANTALLA, "[CONTINUAR]", 16, ANCHO - 100, ALTO - 20, GRIS)
 
         pygame.display.flip()
-        await asyncio.sleep(0) 
+        await asyncio.sleep(0) # CLAVE WEB
     
     pygame.mixer.music.stop() 
     return "seleccion"
 
 async def menu_principal():
-    cambiar_musica("musica_menu.ogg") 
+    cambiar_musica("musica_menu.ogg")
     pantalla = True
     while pantalla:
         RELOJ.tick(FPS)
@@ -725,12 +725,12 @@ async def menu_principal():
                 pygame.quit()
                 exit()
         pygame.display.flip()
-        await asyncio.sleep(0) 
+        await asyncio.sleep(0) # CLAVE WEB
 
 async def menu_seleccion():
     global nave_seleccionada, monedas_totales
     if not pygame.mixer.music.get_busy():
-        cambiar_musica("musica_menu.ogg") 
+        cambiar_musica("musica_menu.ogg")
 
     pantalla = True
     while pantalla:
@@ -779,7 +779,7 @@ async def menu_seleccion():
                 exit()
         
         pygame.display.flip()
-        await asyncio.sleep(0) 
+        await asyncio.sleep(0) # CLAVE WEB
 
 async def ciclo_juego():
     global score, boss_activo, boss, monedas_totales 
@@ -799,14 +799,15 @@ async def ciclo_juego():
                     all_sprites.add(boss)
                     grupo_boss.add(boss)
                     for e in enemigos: e.kill()
-                    cambiar_musica("musica_jefe.ogg") 
+                    cambiar_musica("musica_jefe.ogg")
                 if evento.key == pygame.K_t:
                     if jugador.bombas > 0:
                         jugador.bombas -= 1
                         if sonido_bomba: sonido_bomba.play()
                         PANTALLA.fill(BLANCO)
                         pygame.display.flip()
-                        pygame.time.delay(50)
+                        # ELIMINADO: pygame.time.delay(50) causaba lag
+                        await asyncio.sleep(0.05) 
                         
                         for e in list(enemigos):
                             e.vida -= 1000
@@ -835,7 +836,7 @@ async def ciclo_juego():
             all_sprites.add(boss)
             grupo_boss.add(boss)
             for e in enemigos: e.kill()
-            cambiar_musica("musica_jefe.ogg") 
+            cambiar_musica("musica_jefe.ogg")
 
         impactos = pygame.sprite.groupcollide(enemigos, balas_jugador, False, True)
         for enemigo, lista_balas in impactos.items():
@@ -916,7 +917,7 @@ async def ciclo_juego():
             pygame.draw.rect(PANTALLA, MORADO, (ANCHO//2-100, 90, (boss.vida/boss.vida_max)*200, 20))
 
         pygame.display.flip()
-        await asyncio.sleep(0) 
+        await asyncio.sleep(0) # CLAVE WEB
 
 async def pantalla_fin(tipo):
     imagen_fondo = None
@@ -964,8 +965,9 @@ async def pantalla_fin(tipo):
                 pygame.quit()
                 exit()
         pygame.display.flip()
-        await asyncio.sleep(0) 
+        await asyncio.sleep(0) # CLAVE WEB
 
+# ESTA FUNCIÓN HACE LA MAGIA DE UNIR TODO EN LA WEB
 async def main():
     estado_actual = "menu"
     while True:
@@ -976,6 +978,6 @@ async def main():
         elif estado_actual == "game_over": estado_actual = await pantalla_fin("derrota")
         elif estado_actual == "victoria": estado_actual = await pantalla_fin("victoria")
         elif estado_actual == "epilogo": estado_actual = await animacion_epilogo()
-        await asyncio.sleep(0)
+        await asyncio.sleep(0) # CLAVE WEB
 
 asyncio.run(main())
