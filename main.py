@@ -8,7 +8,6 @@ pygame.mixer.init()
 
 ANCHO = 800
 ALTO = 600
-# SIN SCALED para que el puntero del mouse no se descalibre
 PANTALLA = pygame.display.set_mode((ANCHO, ALTO))
 pygame.display.set_caption("ITESCO EN EL ESPACIO - Equipo 2")
 RELOJ = pygame.time.Clock()
@@ -110,7 +109,6 @@ sonidos_disparos = {
 
 def cambiar_musica(archivo):
     try:
-        # ¡LA SOLUCIÓN! Quitamos el fadeout() que crasheaba el navegador
         if pygame.mixer.music.get_busy():
              pygame.mixer.music.stop()
         pygame.mixer.music.load(archivo)
@@ -709,7 +707,7 @@ async def menu_seleccion():
 async def ciclo_juego():
     global score, boss_activo, boss, monedas_totales 
     flash_frames = 0 
-    trigger_boss = False # <--- SEGURO PARA EL BOTON B
+    trigger_boss = False 
 
     while True:
         RELOJ.tick(FPS)
@@ -718,7 +716,7 @@ async def ciclo_juego():
                 pygame.quit(); exit()
             elif evento.type == pygame.KEYDOWN:
                 if evento.key == pygame.K_b and not boss_activo:
-                    trigger_boss = True # Marca que se pidió al jefe, pero no lo ejecuta aquí adentro
+                    trigger_boss = True 
                 if evento.key == pygame.K_t:
                     if jugador.bombas > 0:
                         jugador.bombas -= 1
@@ -738,7 +736,6 @@ async def ciclo_juego():
         all_sprites.update()
         if not boss_activo and len(enemigos) < 8: spawn_enemigos(8 - len(enemigos))
         
-        # --- AQUÍ SE EVALÚA AL JEFE DE FORMA SEGURA (SIN BLOQUEAR TECLAS) ---
         if (trigger_boss or score >= 100) and not boss_activo:
             await animacion_jefe() 
             boss_activo = True; boss = Boss(jugador); all_sprites.add(boss); grupo_boss.add(boss)
@@ -803,6 +800,7 @@ async def ciclo_juego():
         pygame.display.flip()
         await asyncio.sleep(0) 
 
+# --- AQUÍ ESTÁ LA CORRECCIÓN DEL TYPO QUE CONGELABA EL JUEGO ---
 async def pantalla_fin(tipo):
     img_bg = img_fondo_win if tipo == "victoria" else img_fondo_gameover
     txt_titulo = "¡MISIÓN COMPLETADA!" if tipo == "victoria" else "NAVE DESTRUIDA"
@@ -819,11 +817,14 @@ async def pantalla_fin(tipo):
             if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
                 clic = True
 
-        PANTALLA.blit(img_bg, (0, 0)) if img_bg else PANTALLA.fill(NEGRO)
+        if img_bg: PANTALLA.blit(img_bg, (0, 0))
+        else: PANTALLA.fill(NEGRO)
+        
         off_y = 150 if img_bg else 0 
 
         dibujar_texto_con_fondo(PANTALLA, txt_titulo, 50, ANCHO//2, 100 + off_y, c_titulo)
-        dibujar_texto_con_fondo(PANTALLA, f"Puntaje Final: {score}", 30, ANCHO//2, 200 + offset_y)
+        # EL ERROR ESTABA AQUÍ: Decía offset_y en lugar de off_y, lo que crasheaba a Python en la nube
+        dibujar_texto_con_fondo(PANTALLA, f"Puntaje Final: {score}", 30, ANCHO//2, 200 + off_y)
         dibujar_texto_con_fondo(PANTALLA, f"Monedas Ganadas: {jugador.monedas_partida}", 30, ANCHO//2, 250 + off_y, AMARILLO)
         
         if dibujar_boton(PANTALLA, "CONTINUAR..." if tipo == "victoria" else "IR A LA TIENDA", ANCHO//2 - 100, 350 + off_y, 200, 50, AZUL, BLANCO, clic):
