@@ -30,6 +30,8 @@ img_fondo_inicio = cargar_fondo("inicio.png"); img_fondo_juego = cargar_fondo("f
 img_fondo_jefe = cargar_fondo("fondo_jefe.png")
 img_fondo_win = cargar_fondo("win2.png")
 img_fondo_win_kenzo = cargar_fondo("win_kenzo.png") 
+img_fondo_win_equipo = cargar_fondo("equipo_win.png")
+
 img_fondo_gameover = cargar_fondo("gameover2.png"); img_itesco = cargar_fondo("itesco.png")
 img_itesco_noche = cargar_fondo("itesco_noche.png")
 
@@ -66,7 +68,6 @@ def cargar_sonido(n):
 sonido_explosion = cargar_sonido("explosion.ogg"); sonido_moneda = cargar_sonido("coin.ogg")
 sonido_gameover = cargar_sonido("gameover.ogg"); sonido_victoria = cargar_sonido("win.ogg")
 sonido_powerup = cargar_sonido("powerup.ogg"); sonido_bomba = cargar_sonido("bomba.ogg")
-sonido_kenzo_malo = cargar_sonido("final.ogg")
 sonidos_disparos = {"normal": cargar_sonido("laser_normal.ogg"), "rapida": cargar_sonido("laser_rapido.ogg"),
                     "pesada": cargar_sonido("laser_pesado.ogg"), "triple": cargar_sonido("laser_escopeta.ogg"),
                     "laser": cargar_sonido("laser_sniper.ogg"), "auto": cargar_sonido("laser_auto.ogg")}
@@ -266,7 +267,7 @@ def reiniciar_partida():
     jugador = Jugador(NAVES_INFO[nave_seleccionada], mejoras[nave_seleccionada]); all_sprites.add(jugador)
     score = 0; boss_activo = False; spawn_enemigos(8); pygame.mixer.stop()
 
-# --- CINEMÁTICAS CON DIÁLOGOS MEJORADOS ---
+# --- CINEMÁTICAS ---
 async def animacion_dialogos(guion):
     i = 0
     while i < len(guion):
@@ -293,7 +294,7 @@ async def animacion_dialogos(guion):
 
 async def animacion_intro():
     await animacion_dialogos([
-        {"texto": "Kenzo: ¿Alguien vio mi USB? ¡Traigo todo el proyecto final ahí!", "activos": ["kenzo", "dibanhi", "santiago", "belen"]},
+        {"texto": "Kenzo: ¿Alguien vio mi USB? ¡Traigo todo el proyecto final de Betanzos ahí!", "activos": ["kenzo", "dibanhi", "santiago", "belen"]},
         {"texto": "Dibanhi: No me digas que Moy la trae... ¡Ese wey siempre llega tarde!", "activos": ["kenzo", "dibanhi", "santiago", "belen"]},
         {"texto": "Santiago: ¡Si reprobamos por su culpa lo voy a reprobar de la vida!", "activos": ["kenzo", "dibanhi", "santiago", "belen"]},
         {"texto": "Belen: ¡Cállense! ¿Qué es esa cosa enorme que está tapando el sol?", "activos": ["kenzo", "dibanhi", "santiago", "belen"]},
@@ -343,7 +344,6 @@ async def animacion_pre_jefe_kenzo():
         {"texto": "Kenzo (Renacido): ¡INTÉNTENLO! ¡SU DESTRUCCIÓN SERÁ MI PRIMER LOGRO!", "activos": ["malo"]}
     ])
 
-# --- VUELVE EL EFECTO DE ACERCAMIENTO Y TEMBLOR PARA KENZO MALO ---
 async def animacion_epilogo_normal():
     global kenzo_renacido
     cambiar_musica("final.ogg")
@@ -384,13 +384,10 @@ async def animacion_epilogo_normal():
         if estado == "normal":
             PANTALLA.blit(kenzo_mirando, (200, ALTO - 250)); PANTALLA.blit(jefe_muriendo, (ANCHO - 300, 100))
         elif estado == "absorcion":
-            # Efecto de temblor
             PANTALLA.blit(kenzo_mirando, (200 + random.randint(-8, 8), ALTO - 250 + random.randint(-8, 8)))
             if pygame.time.get_ticks() % 200 < 100: PANTALLA.blit(jefe_muriendo, (ANCHO - 300, 100))
-            # Efecto de destello rojo
             filtro = pygame.Surface((ANCHO, ALTO)); filtro.fill(ROJO); filtro.set_alpha(80); PANTALLA.blit(filtro, (0,0))
         elif estado == "malo":
-            # Efecto de oscurecimiento y ZOOM dramático
             alpha_negro = min(220, alpha_negro + 3)
             sombra = pygame.Surface((ANCHO, ALTO)); sombra.fill(NEGRO); sombra.set_alpha(alpha_negro); PANTALLA.blit(sombra, (0,0))
             zoom_kenzo = min(3.5, zoom_kenzo + 0.008) 
@@ -410,14 +407,14 @@ async def animacion_epilogo_normal():
     pygame.mixer.music.stop(); return "seleccion"
 
 async def animacion_epilogo_salvar_kenzo():
-    global kenzo_renacido; cambiar_musica("final.ogg")
+    global kenzo_renacido
     await animacion_dialogos([
         {"texto": "Moises: ¡LE DIMOS! ¡Los escudos de la nave cayeron! ¡Rápido!", "activos": ["dibanhi", "santiago", "belen", "moises"]},
         {"texto": "Dibanhi: ¡Miren! ¡Esa asquerosa luz morada está saliendo de su cuerpo!", "activos": ["dibanhi", "santiago", "belen", "moises", "aliens"]},
         {"texto": "ALIENS: ¡MALDITOS HUMANOS! ¡ESTO NO SE QUEDARÁ ASÍ! ¡VOLVEREMOS!", "activos": ["aliens"]},
-        {"texto": "Kenzo: Agh... Mi cabeza... Siento como si hubiera reprobado tutorias tres veces seguidas.", "activos": ["kenzo", "dibanhi", "santiago", "belen", "moises"]},
+        {"texto": "Kenzo: Agh... Mi cabeza... Siento como si hubiera reprobado Cálculo tres veces seguidas.", "activos": ["kenzo", "dibanhi", "santiago", "belen", "moises"]},
         {"texto": "Todos: ¡KENZO! ¡ESTÁS VIVO! ¡LO LOGRAMOS!", "activos": ["kenzo", "dibanhi", "santiago", "belen", "moises"]},
-        {"texto": "Kenzo: Gracias, chicos... Creo que ahora sí merecemos ese 10 con el profe.", "activos": ["kenzo", "dibanhi", "santiago", "belen", "moises"]}
+        {"texto": "Kenzo: Gracias, chicos... Creo que ahora sí merecemos ese 10 con el profe Betanzos.", "activos": ["kenzo", "dibanhi", "santiago", "belen", "moises"]}
     ])
     kenzo_renacido = False
     NAVES_INFO[2]["nombre"] = "Kenzo"; NAVES_INFO[2]["img"] = img_nave3
@@ -425,7 +422,6 @@ async def animacion_epilogo_salvar_kenzo():
     pygame.mixer.music.stop(); return "seleccion"
 
 async def animacion_epilogo_kenzo_gana():
-    cambiar_musica("final.ogg")
     await animacion_dialogos([
         {"texto": "Kenzo (Renacido): Patéticos... Se los advertí. Sus lazos de amistad los hicieron débiles.", "activos": ["malo"]},
         {"texto": "Kenzo (Renacido): Sus naves son chatarra. Ahora el servidor central del ITESCO me pertenece.", "activos": ["malo"]},
@@ -434,6 +430,7 @@ async def animacion_epilogo_kenzo_gana():
     ])
     pygame.mixer.music.stop(); return "seleccion"
 
+# --- MENÚS MEJORADOS ---
 async def menu_principal():
     cambiar_musica("musica_menu.ogg") 
     while True:
@@ -444,8 +441,10 @@ async def menu_principal():
         PANTALLA.blit(img_fondo_inicio, (0, 0)) if img_fondo_inicio else PANTALLA.fill(NEGRO)
         dibujar_texto_con_fondo(PANTALLA, "ITESCO EN EL ESPACIO", 50, ANCHO//2, 100, AZUL)
         
-        if dibujar_boton(PANTALLA, "INICIAR JUEGO", ANCHO//2 - 100, 250, 200, 50, VERDE, BLANCO, clic): return "intro" 
-        if dibujar_boton(PANTALLA, "SALIR", ANCHO//2 - 100, 350, 200, 50, ROJO, BLANCO, clic): pygame.quit(); exit()
+        # 3 BOTONES EN EL MENÚ PRINCIPAL
+        if dibujar_boton(PANTALLA, "MODO HISTORIA", ANCHO//2 - 100, 220, 200, 50, VERDE, BLANCO, clic): return "intro" 
+        if dibujar_boton(PANTALLA, "INICIO RÁPIDO", ANCHO//2 - 100, 290, 200, 50, AMARILLO, BLANCO, clic): return "seleccion" 
+        if dibujar_boton(PANTALLA, "SALIR", ANCHO//2 - 100, 360, 200, 50, ROJO, BLANCO, clic): pygame.quit(); exit()
         pygame.display.flip(); await asyncio.sleep(0) 
 
 async def menu_seleccion():
@@ -475,7 +474,9 @@ async def menu_seleccion():
             if dibujar_boton(PANTALLA, f"Mejorar (${costo})", x+100, y+140, 90, 30, AMARILLO, BLANCO, clic) and monedas_totales >= costo:
                 monedas_totales -= costo; mejoras[i] += 1
         
-        if dibujar_boton(PANTALLA, "¡A VOLAR!", ANCHO//2 - 100, 550, 200, 40, AZUL, BLANCO, clic): reiniciar_partida(); return "juego"
+        # 2 BOTONES EN LA TIENDA
+        if dibujar_boton(PANTALLA, "VOLVER AL MENÚ", ANCHO//2 - 210, 550, 200, 40, ROJO, BLANCO, clic): return "menu"
+        if dibujar_boton(PANTALLA, "¡A VOLAR!", ANCHO//2 + 10, 550, 200, 40, AZUL, BLANCO, clic): reiniciar_partida(); return "juego"
         pygame.display.flip(); await asyncio.sleep(0) 
 
 async def ciclo_juego():
@@ -580,12 +581,14 @@ async def pantalla_fin(tipo):
     c_titulo = VERDE if es_vic else ROJO
     txt_titulo = "¡MISIÓN COMPLETADA!" if es_vic else "NAVE DESTRUIDA"
     
-    if tipo == "victoria_kenzo_gana": img_bg = img_fondo_win_kenzo
-    elif es_vic: img_bg = img_fondo_win
-    else: img_bg = img_fondo_gameover
-
-    if es_vic and sonido_victoria: sonido_victoria.play()
-    elif not es_vic and sonido_gameover: sonido_gameover.play()
+    if tipo == "victoria_kenzo_gana":
+        img_bg = img_fondo_win_kenzo; cambiar_musica("kenzo_win.ogg")
+    elif tipo == "victoria_salvar_kenzo":
+        img_bg = img_fondo_win_equipo; cambiar_musica("win_equipo.ogg")
+    elif es_vic:
+        img_bg = img_fondo_win; sonido_victoria.play() if sonido_victoria else None
+    else:
+        img_bg = img_fondo_gameover; sonido_gameover.play() if sonido_gameover else None
 
     while True:
         RELOJ.tick(FPS); clic = False
@@ -601,7 +604,8 @@ async def pantalla_fin(tipo):
         dibujar_texto_con_fondo(PANTALLA, f"Monedas Ganadas: {jugador.monedas_partida}", 30, ANCHO//2, 250+off_y, AMARILLO)
         
         if dibujar_boton(PANTALLA, "CONTINUAR..." if es_vic else "IR A LA TIENDA", ANCHO//2-100, 350+off_y, 200, 50, AZUL, BLANCO, clic):
-             pygame.mixer.stop() 
+             if tipo == "victoria_normal" or tipo == "derrota": pygame.mixer.stop() 
+             
              if tipo == "victoria_normal": return "epilogo_normal"
              elif tipo == "victoria_kenzo_gana": return "epilogo_kenzo_gana"
              elif tipo == "victoria_salvar_kenzo": return "epilogo_salvar_kenzo"
