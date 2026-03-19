@@ -93,7 +93,7 @@ SPRITES_SaaS = {}
 for i, name in enumerate(NOMBRES):
     SPRITES_SaaS[name] = {
         "historia_normal": cargar_sprite_seguro([f"{name}.png"], 120, 160),
-        "historia_blackhat": cargar_sprite_seguro([f"{name}_blackhat.png", f"{name}.png"], 120, 160),
+        "historia_blackhat": cargar_sprite_seguro([f"{name}_blackhat.png", f"{name}_malo.png", f"{name}.png"], 120, 160),
         "historia_whitehat": cargar_sprite_seguro([f"{name}_whitehat.png", f"{name}.png"], 120, 160),
         "nave_normal": cargar_sprite_seguro([NAVES_ORIGINALES[i]], 50, 50), 
         "nave_renacida": cargar_sprite_seguro([f"{name}_renacido.png", "nave_renacida.png"], 60, 60),
