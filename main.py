@@ -89,6 +89,9 @@ NOMBRES = ["moises", "santiago", "kenzo", "dibanhi", "belen"]
 NAVES_ORIGINALES = ["nave1.png", "nave2.png", "nave3.png", "nave4.png", "nave5.png"]
 POS_X = {"moises": 30, "dibanhi": 180, "santiago": 330, "kenzo": 480, "belen": 630}
 
+def oa(nombre): return "a" if nombre in ["dibanhi", "belen"] else "o"
+def OA(nombre): return "a" if nombre in ["dibanhi", "belen"] else "o"
+
 SPRITES_SaaS = {}
 for i, name in enumerate(NOMBRES):
     SPRITES_SaaS[name] = {
@@ -581,7 +584,11 @@ async def ciclo_juego():
                 if e.key == pygame.K_t and jugador.bombas > 0:
                     jugador.bombas -= 1; flash_frames = 3
                     if sonido_bomba: sonido_bomba.play()
-                    for en in list(enemigos): en.vida -= 1000; (en.kill(), score.__add__(10)) if en.vida <= 0 else None
+                    for en in list(enemigos):
+                        en.vida -= 1000
+                        if en.vida <= 0:
+                            en.kill()
+                            score += 10
                     for b in grupo_boss: b.vida -= 500
                 if e.key == pygame.K_f: 
                     pygame.mixer.music.stop()
@@ -608,8 +615,11 @@ async def ciclo_juego():
                     elif random.random() > 0.6: Moneda(enemigo.rect.centerx, enemigo.rect.centery).add(all_sprites, monedas)
 
         for p in pygame.sprite.spritecollide(jugador, powerups, True):
-            sonido_powerup.play() if sonido_powerup else None
-            (jugador.vida.__setattr__("vida", min(jugador.vida_max, jugador.vida + 30)), None) if p.tipo == 'vida' else jugador.activar_doble_disparo()
+            if sonido_powerup: sonido_powerup.play()
+            if p.tipo == 'vida':
+                jugador.vida = min(jugador.vida_max, jugador.vida + 30)
+            else:
+                jugador.activar_doble_disparo()
 
         if boss_activo:
             for boss_obj, l_balas in pygame.sprite.groupcollide(grupo_boss, balas_jugador, False, True).items():
